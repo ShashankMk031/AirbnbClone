@@ -48,3 +48,7 @@ yarn-error.log*
 .vscode/
 .idea/
 .DS_Store
+
+# Local Run documentation
+RUN.md
+

@@ -1,8 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_availability_service
+from app.api.deps import get_db, get_availability_service, get_booking_service
 from app.services.availability import AvailabilityService
-from app.schemas.booking import BookingCreate, BookingResponse
+from app.services.booking import (
+    BookingService,
+    BookingNotFoundError,
+    BookingNotOwnerError,
+    BookingStatusError,
+)
+from app.schemas.booking import BookingCreate, BookingResponse, BookingResponseWithListing
 from app.models.booking import Booking, BookingStatus
 from app.models.listing import Listing
 
@@ -77,10 +83,58 @@ def create_booking(
     return db_booking
 
 
-@router.get("/")
+@router.get("/", response_model=list[BookingResponse])
 def get_bookings(db: Session = Depends(get_db)):
     """
     Retrieve all bookings.
     """
     bookings = db.query(Booking).all()
     return bookings
+
+
+@router.get("/{id}", response_model=BookingResponseWithListing)
+def get_booking_by_id(
+    id: int,
+    booking_service: BookingService = Depends(get_booking_service)
+):
+    """
+    Retrieve details of a single booking including preloaded listing summary.
+    Returns HTTP 404 if booking doesn't exist.
+    """
+    booking = booking_service.get_booking_by_id(id)
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Booking with ID {id} not found."
+        )
+    return booking
+
+
+@router.patch("/{id}/cancel", response_model=BookingResponse)
+def cancel_booking(
+    id: int,
+    *,
+    guest_id: int = Query(..., description="The ID of the guest trying to cancel the booking"),
+    booking_service: BookingService = Depends(get_booking_service)
+):
+    """
+    Cancel an active CONFIRMED booking. Verifies ownership of guest_id.
+    """
+    try:
+        updated_booking = booking_service.cancel_booking(booking_id=id, guest_id=guest_id)
+        return updated_booking
+    except BookingNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except BookingNotOwnerError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except BookingStatusError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

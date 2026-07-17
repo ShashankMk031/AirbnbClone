@@ -1,16 +1,52 @@
 import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from app.api.deps import get_listing_service
-from app.services.listing import ListingService
+from app.services.listing import (
+    ListingService,
+    ListingNotFoundError,
+    HostNotFoundError,
+    NotOwnerError,
+)
 from app.schemas.listing import (
     PaginatedListingResponse,
     ListingDetailResponse,
+    ListingSummaryResponse,
     HostSummaryResponse,
     ListingSort,
+    ListingCreate,
+    ListingUpdate,
 )
 
 router = APIRouter()
+
+
+def _map_to_detail_response(listing, is_available: Optional[bool] = None) -> ListingDetailResponse:
+    """
+    Helper function to explicitly construct and map ListingDetailResponse
+    without dynamically mutating the ORM model objects.
+    """
+    return ListingDetailResponse(
+        id=listing.id,
+        host_id=listing.host_id,
+        host=HostSummaryResponse.model_validate(listing.host) if listing.host else None,
+        title=listing.title,
+        description=listing.description,
+        location=listing.location,
+        latitude=listing.latitude,
+        longitude=listing.longitude,
+        price_per_night=listing.price_per_night,
+        property_type=listing.property_type,
+        max_guests=listing.max_guests,
+        bedrooms=listing.bedrooms,
+        bathrooms=listing.bathrooms,
+        amenities=listing.amenities,
+        photos=listing.photos,
+        rating=listing.rating,
+        review_count=listing.review_count,
+        created_at=listing.created_at,
+        is_available=is_available
+    )
 
 
 @router.get("/", response_model=PaginatedListingResponse)
@@ -31,6 +67,7 @@ def get_listings(
     """
     Explore listings with filtering (location, dates, guests, property type, price)
     and custom sorting (price_asc, price_desc, rating, default newest).
+    Explicitly maps database models to ListingSummaryResponse objects.
     """
     # 1. Validate date ranges if provided
     if (check_in is not None) != (check_out is not None):
@@ -53,7 +90,7 @@ def get_listings(
                 detail="min_price cannot be greater than max_price."
             )
 
-    return listing_service.get_listings(
+    result = listing_service.get_listings(
         location=location,
         check_in=check_in,
         check_out=check_out,
@@ -64,6 +101,19 @@ def get_listings(
         page=page,
         page_size=page_size,
         sort_by=sort_by
+    )
+
+    # Explicitly map items into ListingSummaryResponse
+    items_mapped = [
+        ListingSummaryResponse.model_validate(item) for item in result["items"]
+    ]
+
+    return PaginatedListingResponse(
+        items=items_mapped,
+        page=result["page"],
+        page_size=result["page_size"],
+        total=result["total"],
+        total_pages=result["total_pages"]
     )
 
 
@@ -102,29 +152,79 @@ def get_listing_by_id(
             detail=f"Listing with ID {id} not found."
         )
 
-    listing = res["listing"]
-    is_available = res["is_available"]
+    return _map_to_detail_response(res["listing"], res["is_available"])
 
-    # Explicit mapping to ListingDetailResponse to guarantee type-safety
-    # and restrict host fields from exposing credentials/roles
-    return ListingDetailResponse(
-        id=listing.id,
-        host_id=listing.host_id,
-        host=HostSummaryResponse.model_validate(listing.host) if listing.host else None,
-        title=listing.title,
-        description=listing.description,
-        location=listing.location,
-        latitude=listing.latitude,
-        longitude=listing.longitude,
-        price_per_night=listing.price_per_night,
-        property_type=listing.property_type,
-        max_guests=listing.max_guests,
-        bedrooms=listing.bedrooms,
-        bathrooms=listing.bathrooms,
-        amenities=listing.amenities,
-        photos=listing.photos,
-        rating=listing.rating,
-        review_count=listing.review_count,
-        created_at=listing.created_at,
-        is_available=is_available
-    )
+
+@router.post("/", response_model=ListingDetailResponse, status_code=status.HTTP_201_CREATED)
+def create_listing(
+    *,
+    listing_in: ListingCreate,
+    listing_service: ListingService = Depends(get_listing_service)
+):
+    """
+    Create a new listing. Verifies that the host_id exists.
+    """
+    try:
+        db_listing = listing_service.create_listing(listing_in)
+        return _map_to_detail_response(db_listing)
+    except HostNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.put("/{id}", response_model=ListingDetailResponse)
+def update_listing(
+    id: int,
+    *,
+    host_id: int = Query(..., description="The ID of the host trying to modify the listing"),
+    listing_in: ListingUpdate,
+    listing_service: ListingService = Depends(get_listing_service)
+):
+    """
+    Update a listing. Supports partial updates and restricts access to owners only.
+    """
+    try:
+        updated_listing = listing_service.update_listing(
+            listing_id=id,
+            host_id=host_id,
+            listing_in=listing_in
+        )
+        return _map_to_detail_response(updated_listing)
+    except ListingNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except NotOwnerError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_listing(
+    id: int,
+    *,
+    host_id: int = Query(..., description="The ID of the host trying to delete the listing"),
+    listing_service: ListingService = Depends(get_listing_service)
+):
+    """
+    Delete a listing. Cascades deletes cleanly to dependent tables.
+    Restricts access to owners only.
+    """
+    try:
+        listing_service.delete_listing(listing_id=id, host_id=host_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except ListingNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except NotOwnerError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )

@@ -2,6 +2,7 @@ import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.models.booking import BookingStatus
+from app.schemas.listing import ListingSummaryResponse
 
 
 class BookingBase(BaseModel):
@@ -47,3 +48,7 @@ class BookingResponse(BookingBase):
 
 class Booking(BookingResponse):
     pass
+
+
+class BookingResponseWithListing(BookingResponse):
+    listing: ListingSummaryResponse

@@ -34,7 +34,7 @@ class ListingBase(BaseModel):
 
 
 class ListingCreate(ListingBase):
-    pass
+    host_id: int
 
 
 class ListingUpdate(BaseModel):

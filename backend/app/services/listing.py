@@ -1,15 +1,37 @@
 import datetime
 import math
 from typing import Optional, List, Dict, Any
-# pyrefly: ignore [missing-import]
 from sqlalchemy import exists
-# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import joinedload
 from app.services.base import BaseService
 from app.models.listing import Listing
 from app.models.booking import Booking, BookingStatus
-from app.schemas.listing import ListingSort
+from app.models.user import User
+from app.schemas.listing import ListingSort, ListingCreate, ListingUpdate
 
+
+# --- Exceptions ---
+
+class ListingServiceException(Exception):
+    pass
+
+
+class HostNotFoundError(ListingServiceException):
+    def __init__(self, host_id: int):
+        super().__init__(f"Host with ID {host_id} not found.")
+
+
+class ListingNotFoundError(ListingServiceException):
+    def __init__(self, listing_id: int):
+        super().__init__(f"Listing with ID {listing_id} not found.")
+
+
+class NotOwnerError(ListingServiceException):
+    def __init__(self):
+        super().__init__("Only the listing owner may modify this listing.")
+
+
+# --- Listing Service Implementation ---
 
 class ListingService(BaseService):
     def get_listings(
@@ -115,3 +137,72 @@ class ListingService(BaseService):
             "listing": listing,
             "is_available": is_available
         }
+
+    def create_listing(self, listing_in: ListingCreate) -> Listing:
+        """
+        Create a new Listing. Checks if the host_id exists.
+        Returns the created Listing.
+        """
+        host = self.db.query(User).filter(User.id == listing_in.host_id).first()
+        if not host:
+            raise HostNotFoundError(listing_in.host_id)
+
+        db_listing = Listing(
+            host_id=listing_in.host_id,
+            title=listing_in.title,
+            description=listing_in.description,
+            location=listing_in.location,
+            latitude=listing_in.latitude,
+            longitude=listing_in.longitude,
+            price_per_night=listing_in.price_per_night,
+            property_type=listing_in.property_type,
+            max_guests=listing_in.max_guests,
+            bedrooms=listing_in.bedrooms,
+            bathrooms=listing_in.bathrooms,
+            amenities=listing_in.amenities,
+            photos=listing_in.photos
+        )
+        self.db.add(db_listing)
+        self.db.commit()
+        
+        # Reload with host preloaded to fulfill ListingDetailResponse requirements
+        return self.db.query(Listing).options(joinedload(Listing.host)).filter(Listing.id == db_listing.id).first()
+
+    def update_listing(self, listing_id: int, host_id: int, listing_in: ListingUpdate) -> Listing:
+        """
+        Update a Listing. Verifies ownership of host_id.
+        Supports partial updates.
+        """
+        listing = self.db.query(Listing).options(joinedload(Listing.host)).filter(Listing.id == listing_id).first()
+        if not listing:
+            raise ListingNotFoundError(listing_id)
+
+        # Enforce host ownership validation check
+        if listing.host_id != host_id:
+            raise NotOwnerError()
+
+        # Apply updates dynamically
+        update_data = listing_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(listing, field, value)
+
+        self.db.commit()
+        self.db.refresh(listing)
+        return listing
+
+    def delete_listing(self, listing_id: int, host_id: int) -> bool:
+        """
+        Delete a Listing. Verifies ownership of host_id.
+        Triggers cascade deletes to dependent tables (Bookings, Reviews, Wishlists).
+        """
+        listing = self.db.query(Listing).filter(Listing.id == listing_id).first()
+        if not listing:
+            raise ListingNotFoundError(listing_id)
+
+        # Enforce host ownership validation check
+        if listing.host_id != host_id:
+            raise NotOwnerError()
+
+        self.db.delete(listing)
+        self.db.commit()
+        return True

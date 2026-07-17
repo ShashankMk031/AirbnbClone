@@ -10,7 +10,13 @@ from app.schemas.listing import (
     PaginatedListingResponse,
     ListingSort,
 )
-from app.schemas.booking import Booking, BookingCreate, BookingUpdate, BookingResponse
+from app.schemas.booking import (
+    Booking,
+    BookingCreate,
+    BookingUpdate,
+    BookingResponse,
+    BookingResponseWithListing,
+)
 from app.schemas.review import Review, ReviewCreate, ReviewUpdate, ReviewResponse
 from app.schemas.wishlist import Wishlist, WishlistCreate, WishlistResponse
 
@@ -32,6 +38,7 @@ __all__ = [
     "BookingCreate",
     "BookingUpdate",
     "BookingResponse",
+    "BookingResponseWithListing",
     "Review",
     "ReviewCreate",
     "ReviewUpdate",
