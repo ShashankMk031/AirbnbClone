@@ -4,6 +4,7 @@ import ListingInfo from "../../../components/listings/ListingInfo";
 import AmenitiesSection from "../../../components/listings/AmenitiesSection";
 import ReviewsSection from "../../../components/listings/ReviewsSection";
 import BookingWidget from "../../../components/booking/BookingWidget";
+import LocationMap from "../../../components/listings/LocationMap";
 import { getListing } from "../../../services/listings";
 import { getListingReviews } from "../../../services/reviews";
 import { Review } from "../../../types/review";
@@ -123,6 +124,7 @@ export default async function ListingDetailPage({ params }: Props) {
         <div className="md:col-span-2 space-y-6">
           <ListingInfo listing={listing} />
           <AmenitiesSection amenities={listing.amenities} />
+          <LocationMap listing={listing} />
         </div>
 
         {/* Sticky Booking Widget (1/3 width on desktop) */}
