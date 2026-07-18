@@ -97,13 +97,13 @@ export default function HomeSearchBar() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto mb-8">
+    <div className="w-full max-w-4xl mx-auto mb-8 px-2 md:px-0">
       <form
         onSubmit={handleSearch}
-        className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 p-2 pl-6 flex flex-col md:flex-row items-center gap-2 md:gap-0"
+        className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl md:rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 p-3 md:p-2 md:pl-6 flex flex-col md:flex-row items-center gap-3 md:gap-0"
       >
         {/* Location */}
-        <div className="flex-1 w-full text-left py-2 px-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-full transition-colors duration-200">
+        <div className="flex-1 w-full text-left py-2 px-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-2xl md:rounded-full transition-colors duration-200">
           <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
             Where
           </label>
@@ -119,7 +119,7 @@ export default function HomeSearchBar() {
         <div className="hidden md:block h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
 
         {/* Check-in */}
-        <div className="flex-1 w-full text-left py-2 px-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-full transition-colors duration-200">
+        <div className="flex-1 w-full text-left py-2 px-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-2xl md:rounded-full transition-colors duration-200">
           <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
             Check in
           </label>
@@ -134,7 +134,7 @@ export default function HomeSearchBar() {
         <div className="hidden md:block h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
 
         {/* Check-out */}
-        <div className="flex-1 w-full text-left py-2 px-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-full transition-colors duration-200">
+        <div className="flex-1 w-full text-left py-2 px-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-2xl md:rounded-full transition-colors duration-200">
           <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
             Check out
           </label>
@@ -149,7 +149,7 @@ export default function HomeSearchBar() {
         <div className="hidden md:block h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
 
         {/* Guests */}
-        <div className="w-full md:w-44 text-left py-2 px-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-full transition-colors duration-200 flex justify-between items-center pr-2">
+        <div className="w-full md:w-44 text-left py-2 px-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-2xl md:rounded-full transition-colors duration-200 flex justify-between items-center pr-2">
           <div className="flex-1">
             <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
               Who
@@ -169,12 +169,12 @@ export default function HomeSearchBar() {
             </select>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1">
             {(location || checkIn || checkOut || guests) && (
               <button
                 type="button"
                 onClick={handleClear}
-                className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full transition-colors duration-200 mr-1"
+                className="p-2 text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 rounded-full transition-colors duration-200 mr-1"
                 title="Clear Search"
               >
                 <svg
@@ -191,7 +191,7 @@ export default function HomeSearchBar() {
             )}
             <button
               type="submit"
-              className="p-3 bg-[#FF385C] hover:bg-[#E61E4D] text-white rounded-full transition-colors duration-300 shadow-md flex items-center justify-center shrink-0"
+              className="p-3 bg-[#FF385C] hover:bg-[#E61E4D] text-white rounded-full transition-colors duration-300 shadow-md flex items-center justify-center shrink-0 cursor-pointer"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -209,6 +209,39 @@ export default function HomeSearchBar() {
               </svg>
             </button>
           </div>
+        </div>
+
+        {/* Mobile action buttons block */}
+        <div className="flex md:hidden w-full items-center gap-2 border-t border-zinc-100 dark:border-zinc-900 pt-3 mt-1">
+          {(location || checkIn || checkOut || guests) && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="flex-1 py-3 border border-zinc-200 dark:border-zinc-800 text-zinc-650 dark:text-zinc-300 font-bold rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition text-xs uppercase tracking-wider cursor-pointer text-center"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            type="submit"
+            className="flex-[2] py-3 bg-[#FF385C] hover:bg-[#E61E4D] text-white font-extrabold rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+              />
+            </svg>
+            <span>Search</span>
+          </button>
         </div>
       </form>
 

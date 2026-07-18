@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
+import MobileNavbar from "../components/common/MobileNavbar";
 import { RoleProvider } from "../context/RoleContext";
 import "./globals.css";
 
@@ -19,7 +20,8 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col bg-background text-foreground antialiased">
         <RoleProvider>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pb-20 md:pb-0">{children}</main>
+          <MobileNavbar />
           <Footer />
         </RoleProvider>
       </body>
