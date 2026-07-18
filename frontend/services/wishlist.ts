@@ -19,3 +19,9 @@ export async function getUserWishlist(userId: number): Promise<WishlistListing[]
     method: "GET",
   });
 }
+
+export async function getUserWishlistIds(userId: number): Promise<Record<number, number>> {
+  return request<Record<number, number>>(`/users/${userId}/wishlist-ids`, {
+    method: "GET",
+  });
+}

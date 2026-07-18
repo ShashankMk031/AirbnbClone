@@ -8,8 +8,7 @@ import LocationMap from "../../../components/listings/LocationMap";
 import { getListing } from "../../../services/listings";
 import { getListingReviews } from "../../../services/reviews";
 import { Review } from "../../../types/review";
-import { execSync } from "child_process";
-import path from "path";
+import { getUserWishlistIds } from "../../../services/wishlist";
 import WishlistHeartButton from "../../../components/listings/WishlistHeartButton";
 
 type Props = {
@@ -54,14 +53,12 @@ export default async function ListingDetailPage({ params }: Props) {
   let wishlistId: number | null = null;
   if (listing) {
     try {
-      const dbPath = path.resolve(process.cwd(), "../backend/airbnb_clone.db");
-      const query = `SELECT id FROM wishlists WHERE user_id = 4 AND listing_id = ${listingId} LIMIT 1;`;
-      const result = execSync(`sqlite3 "${dbPath}" "${query}"`).toString().trim();
-      if (result) {
-        wishlistId = Number(result);
+      const wishlistMap = await getUserWishlistIds(4);
+      if (wishlistMap[listingId] !== undefined) {
+        wishlistId = wishlistMap[listingId];
       }
     } catch (err) {
-      console.error("Failed to query wishlist ID for listing:", err);
+      console.error("Failed to fetch wishlist ID for listing:", err);
     }
   }
 

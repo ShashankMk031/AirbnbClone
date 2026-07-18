@@ -3,8 +3,7 @@ import FilterBar from "../components/listings/FilterBar";
 import ListingGrid from "../components/listings/ListingGrid";
 import Pagination from "../components/listings/Pagination";
 import { getListings, GetListingsParams } from "../services/listings";
-import { execSync } from "child_process";
-import path from "path";
+import { getUserWishlistIds } from "../services/wishlist";
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -57,19 +56,9 @@ export default async function HomePage({ searchParams }: Props) {
     errorMsg = err.message || "Failed to load listings from the server.";
   }
 
-  const wishlistMap: Record<number, number> = {};
+  let wishlistMap: Record<number, number> = {};
   try {
-    const dbPath = path.resolve(process.cwd(), "../backend/airbnb_clone.db");
-    const query = "SELECT listing_id, id FROM wishlists WHERE user_id = 4;";
-    const result = execSync(`sqlite3 "${dbPath}" "${query}"`).toString().trim();
-    if (result) {
-      result.split("\n").forEach((line) => {
-        const [listingId, wishlistId] = line.split("|");
-        if (listingId && wishlistId) {
-          wishlistMap[Number(listingId)] = Number(wishlistId);
-        }
-      });
-    }
+    wishlistMap = await getUserWishlistIds(4);
   } catch (err) {
     console.error("Failed to load wishlist mapping:", err);
   }

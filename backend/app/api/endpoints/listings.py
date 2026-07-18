@@ -64,6 +64,7 @@ def get_listings(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     sort_by: Optional[ListingSort] = None,
+    host_id: Optional[int] = Query(None, description="Filter listings by host ID"),
     listing_service: ListingService = Depends(get_listing_service)
 ):
     """
@@ -102,7 +103,8 @@ def get_listings(
         max_price=max_price,
         page=page,
         page_size=page_size,
-        sort_by=sort_by
+        sort_by=sort_by,
+        host_id=host_id
     )
 
     # Explicitly map items into ListingSummaryResponse

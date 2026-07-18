@@ -12,6 +12,7 @@ export interface GetListingsParams {
   page?: number;
   page_size?: number;
   sort_by?: "price_asc" | "price_desc" | "rating";
+  host_id?: number;
 }
 
 export interface CreateListingInput {

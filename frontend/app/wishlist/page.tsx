@@ -1,35 +1,23 @@
 import Link from "next/link";
-import { execSync } from "child_process";
-import path from "path";
 import ListingGrid from "../../components/listings/ListingGrid";
-import { getUserWishlist } from "../../services/wishlist";
+import { getUserWishlist, getUserWishlistIds } from "../../services/wishlist";
 import { WishlistListing } from "../../types/wishlist";
 import RoleGuard from "../../components/common/RoleGuard";
 
 export default async function WishlistPage() {
   let listings: WishlistListing[] = [];
   let errorMsg = null;
-  const wishlistMap: Record<number, number> = {};
+  let wishlistMap: Record<number, number> = {};
 
   try {
     // 1. Fetch user wishlists from API (mock user ID 4)
     listings = await getUserWishlist(4);
 
-    // 2. Query SQLite directly to get the mapping from listing_id -> wishlist_id
+    // 2. Fetch the mapping from listing_id -> wishlist_id from API (mock user ID 4)
     try {
-      const dbPath = path.resolve(process.cwd(), "../backend/airbnb_clone.db");
-      const query = "SELECT listing_id, id FROM wishlists WHERE user_id = 4;";
-      const result = execSync(`sqlite3 "${dbPath}" "${query}"`).toString().trim();
-      if (result) {
-        result.split("\n").forEach((line) => {
-          const [listingId, wishlistId] = line.split("|");
-          if (listingId && wishlistId) {
-            wishlistMap[Number(listingId)] = Number(wishlistId);
-          }
-        });
-      }
+      wishlistMap = await getUserWishlistIds(4);
     } catch (err) {
-      console.error("Failed to query wishlist ids database:", err);
+      console.error("Failed to fetch wishlist ids mapping:", err);
     }
   } catch (err: any) {
     errorMsg = err.message || "Failed to load wishlist details.";

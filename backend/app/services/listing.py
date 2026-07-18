@@ -46,7 +46,8 @@ class ListingService(BaseService):
         max_price: Optional[float] = None,
         page: int = 1,
         page_size: int = 10,
-        sort_by: Optional[ListingSort] = None
+        sort_by: Optional[ListingSort] = None,
+        host_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Query listings with sorting, pagination, and multi-field filters.
@@ -54,6 +55,10 @@ class ListingService(BaseService):
         date range availability checking directly within SQL via NOT EXISTS subqueries.
         """
         query = self.db.query(Listing).options(joinedload(Listing.host))
+
+        # 0. Filter by host if provided
+        if host_id is not None:
+            query = query.filter(Listing.host_id == host_id)
 
         # 1. Partial case-insensitive location filter
         if location:

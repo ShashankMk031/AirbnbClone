@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
-from app.api.deps import get_booking_service, get_wishlist_service
+from app.api.deps import get_booking_service, get_wishlist_service, get_db
+from sqlalchemy.orm import Session
 from app.services.booking import BookingService
 from app.services.wishlist import WishlistService, WishlistUserNotFoundError
 from app.schemas.booking import BookingResponseWithListing
@@ -37,3 +38,16 @@ def get_user_wishlist(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
+
+
+@router.get("/{id}/wishlist-ids", response_model=dict[int, int])
+def get_user_wishlist_ids(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get mapping from listing_id -> wishlist_id for a user.
+    """
+    from app.models.wishlist import Wishlist
+    wishlists = db.query(Wishlist).filter(Wishlist.user_id == id).all()
+    return {w.listing_id: w.id for w in wishlists}
