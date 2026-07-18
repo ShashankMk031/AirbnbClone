@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import path from "path";
 import HostDashboardClient from "../../../components/host/HostDashboardClient";
+import RoleGuard from "../../../components/common/RoleGuard";
 
 export default async function HostDashboardPage() {
   let listings = [];
@@ -44,17 +45,19 @@ export default async function HostDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {errorMsg ? (
-        <div className="w-full text-center py-16 px-4 bg-rose-50 dark:bg-rose-950/20 rounded-3xl border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300">
-          <h3 className="text-lg font-bold">Failed to connect to database</h3>
-          <p className="text-sm mt-1 max-w-md mx-auto opacity-90">
-            {errorMsg}. Make sure the SQLite database exists at backend/airbnb_clone.db.
-          </p>
-        </div>
-      ) : (
-        <HostDashboardClient listings={listings} />
-      )}
-    </div>
+    <RoleGuard allowedRole="host">
+      <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {errorMsg ? (
+          <div className="w-full text-center py-16 px-4 bg-rose-50 dark:bg-rose-950/20 rounded-3xl border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300">
+            <h3 className="text-lg font-bold">Failed to connect to database</h3>
+            <p className="text-sm mt-1 max-w-md mx-auto opacity-90">
+              {errorMsg}. Make sure the SQLite database exists at backend/airbnb_clone.db.
+            </p>
+          </div>
+        ) : (
+          <HostDashboardClient listings={listings} />
+        )}
+      </div>
+    </RoleGuard>
   );
 }
