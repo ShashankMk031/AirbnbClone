@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
@@ -7,7 +7,7 @@ interface RequestOptions extends RequestInit {
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { params, headers, ...rest } = options;
 
-  let url = `${API_BASE}${path}`;
+  let url = `${API_BASE_URL}${path}`;
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, val]) => {
