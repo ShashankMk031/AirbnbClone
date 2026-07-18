@@ -12,6 +12,15 @@ export default function HomeSearchBar() {
   const [checkOut, setCheckOut] = useState(searchParams.get("check_out") || "");
   const [guests, setGuests] = useState(searchParams.get("guests") || "");
   const [error, setError] = useState<string | null>(null);
+  const [todayStr, setTodayStr] = useState("");
+
+  useEffect(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    setTodayStr(`${yyyy}-${mm}-${dd}`);
+  }, []);
 
   // 1. Synchronize component state with URL changes (Back, Forward, Refresh, etc.)
   useEffect(() => {
@@ -24,6 +33,27 @@ export default function HomeSearchBar() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (checkIn) {
+      const checkInDate = new Date(checkIn);
+      checkInDate.setHours(0, 0, 0, 0);
+      if (checkInDate < today) {
+        setError("Check-in date cannot be in the past.");
+        return;
+      }
+    }
+
+    if (checkOut) {
+      const checkOutDate = new Date(checkOut);
+      checkOutDate.setHours(0, 0, 0, 0);
+      if (checkOutDate < today) {
+        setError("Check-out date cannot be in the past.");
+        return;
+      }
+    }
 
     // 2. Client-side date bounds checks
     if (checkIn && checkOut) {
@@ -126,6 +156,7 @@ export default function HomeSearchBar() {
           <input
             type="date"
             value={checkIn}
+            min={todayStr}
             onChange={(e) => handleCheckInChange(e.target.value)}
             className="w-full bg-transparent text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none mt-0.5 cursor-pointer"
           />
@@ -141,6 +172,7 @@ export default function HomeSearchBar() {
           <input
             type="date"
             value={checkOut}
+            min={checkIn || todayStr}
             onChange={(e) => handleCheckOutChange(e.target.value)}
             className="w-full bg-transparent text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none mt-0.5 cursor-pointer"
           />

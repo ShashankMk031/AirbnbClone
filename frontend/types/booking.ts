@@ -8,7 +8,7 @@ export interface Booking {
   check_out: string;
   guest_count: number;
   total_price: number;
-  status: "confirmed" | "cancelled";
+  status: "CONFIRMED" | "CANCELLED";
   created_at: string;
 }
 

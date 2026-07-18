@@ -47,6 +47,55 @@ function CheckoutContent() {
       }, 3000);
       return () => clearTimeout(timer);
     }
+
+    // Past date validations
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      setListingError("Invalid booking dates provided. Redirecting to homepage...");
+      setLoadingListing(false);
+      const timer = setTimeout(() => {
+        router.replace("/");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+
+    const startCompare = new Date(checkIn);
+    startCompare.setHours(0, 0, 0, 0);
+
+    const endCompare = new Date(checkOut);
+    endCompare.setHours(0, 0, 0, 0);
+
+    if (startCompare < today) {
+      setListingError("Check-in date cannot be in the past. Redirecting to homepage...");
+      setLoadingListing(false);
+      const timer = setTimeout(() => {
+        router.replace("/");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+
+    if (endCompare < today) {
+      setListingError("Check-out date cannot be in the past. Redirecting to homepage...");
+      setLoadingListing(false);
+      const timer = setTimeout(() => {
+        router.replace("/");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+
+    if (endCompare <= startCompare) {
+      setListingError("Check-out date must be after check-in date. Redirecting to homepage...");
+      setLoadingListing(false);
+      const timer = setTimeout(() => {
+        router.replace("/");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
   }, [listingIdRaw, checkIn, checkOut, router]);
 
   // 2. Fetch listing details on load
@@ -106,6 +155,14 @@ function CheckoutContent() {
       const [m, y] = expiry.split("/").map(Number);
       if (m < 1 || m > 12) {
         errors.expiry = "Month must be between 01 and 12.";
+      } else {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const expYear = 2000 + y;
+        if (expYear < currentYear || (expYear === currentYear && m < currentMonth)) {
+          errors.expiry = "Card has expired.";
+        }
       }
     }
 

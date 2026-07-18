@@ -10,16 +10,30 @@ interface BookingWidgetProps {
   listing: ListingDetail;
 }
 
+const getLocalTodayString = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const getTomorrowString = () => {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toISOString().split("T")[0];
+  const yyyy = tomorrow.getFullYear();
+  const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+  const dd = String(tomorrow.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 const getDayAfterTomorrowString = () => {
   const dayAfter = new Date();
   dayAfter.setDate(dayAfter.getDate() + 2);
-  return dayAfter.toISOString().split("T")[0];
+  const yyyy = dayAfter.getFullYear();
+  const mm = String(dayAfter.getMonth() + 1).padStart(2, "0");
+  const dd = String(dayAfter.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 export default function BookingWidget({ listing }: BookingWidgetProps) {
@@ -40,6 +54,30 @@ export default function BookingWidget({ listing }: BookingWidgetProps) {
     if (checkIn && checkOut) {
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const compareIn = new Date(checkIn);
+      compareIn.setHours(0, 0, 0, 0);
+
+      const compareOut = new Date(checkOut);
+      compareOut.setHours(0, 0, 0, 0);
+
+      if (compareIn < today) {
+        setNights(0);
+        setSubtotal(0);
+        setErrorMsg("Check-in date cannot be in the past.");
+        return;
+      }
+
+      if (compareOut < today) {
+        setNights(0);
+        setSubtotal(0);
+        setErrorMsg("Check-out date cannot be in the past.");
+        return;
+      }
+
       const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
       const calculatedNights = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
@@ -78,6 +116,25 @@ export default function BookingWidget({ listing }: BookingWidgetProps) {
     }
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const compareIn = new Date(checkIn);
+    compareIn.setHours(0, 0, 0, 0);
+
+    const compareOut = new Date(checkOut);
+    compareOut.setHours(0, 0, 0, 0);
+
+    if (compareIn < today) {
+      setErrorMsg("Check-in date cannot be in the past.");
+      return;
+    }
+    if (compareOut < today) {
+      setErrorMsg("Check-out date cannot be in the past.");
+      return;
+    }
+
     if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
       setErrorMsg("Please select valid dates.");
       return;
@@ -156,7 +213,7 @@ export default function BookingWidget({ listing }: BookingWidgetProps) {
                 type="date"
                 value={checkIn}
                 onChange={(e) => setCheckIn(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
+                min={getLocalTodayString()}
                 className="w-full text-xs font-medium text-zinc-800 dark:text-zinc-200 bg-transparent pt-1 focus:outline-none cursor-pointer"
                 required
               />
@@ -169,7 +226,7 @@ export default function BookingWidget({ listing }: BookingWidgetProps) {
                 type="date"
                 value={checkOut}
                 onChange={(e) => setCheckOut(e.target.value)}
-                min={checkIn || new Date().toISOString().split("T")[0]}
+                min={checkIn || getLocalTodayString()}
                 className="w-full text-xs font-medium text-zinc-800 dark:text-zinc-200 bg-transparent pt-1 focus:outline-none cursor-pointer"
                 required
               />

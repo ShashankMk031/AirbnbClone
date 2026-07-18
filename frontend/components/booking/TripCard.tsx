@@ -48,7 +48,7 @@ export default function TripCard({ booking }: TripCardProps) {
             </Link>
             <span
               className={`px-2 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${
-                booking.status === "confirmed"
+                booking.status === "CONFIRMED"
                   ? "bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400"
                   : "bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400"
               }`}

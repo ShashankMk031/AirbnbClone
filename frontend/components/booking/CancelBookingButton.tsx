@@ -6,7 +6,7 @@ import { cancelBooking } from "../../services/bookings";
 
 interface CancelBookingButtonProps {
   bookingId: number;
-  status: "confirmed" | "cancelled" | string;
+  status: "CONFIRMED" | "CANCELLED" | string;
 }
 
 export default function CancelBookingButton({ bookingId, status }: CancelBookingButtonProps) {
@@ -14,7 +14,7 @@ export default function CancelBookingButton({ bookingId, status }: CancelBooking
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  if (status !== "confirmed") {
+  if (status !== "CONFIRMED") {
     return (
       <span className="inline-block px-4 py-2 text-xs font-extrabold uppercase tracking-wider bg-zinc-100 text-zinc-400 dark:bg-zinc-900 dark:text-zinc-600 rounded-xl cursor-not-allowed">
         Cancelled
