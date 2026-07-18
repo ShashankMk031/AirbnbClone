@@ -507,6 +507,25 @@ def print_summary(db: Session):
     print("=" * 50 + "\n")
 
 
+def seed_data(db: Session):
+    # Seed core entities
+    create_users(db)
+    
+    # Fetch seeded users and pass to child steps
+    seeded_hosts = db.query(User).filter(User.role == UserRole.HOST).all()
+    seeded_guests = db.query(User).filter(User.role == UserRole.GUEST).all()
+    
+    create_listings(db, seeded_hosts)
+    seeded_listings = db.query(Listing).all()
+    
+    create_bookings(db, seeded_guests, seeded_listings)
+    
+    # Seed reviews and calculate average ratings
+    create_reviews(db, seeded_guests, seeded_listings)
+    
+    create_wishlists(db, seeded_guests, seeded_listings)
+
+
 def main():
     db = SessionLocal()
     try:
@@ -514,22 +533,7 @@ def main():
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
         
-        # Seed core entities
-        create_users(db)
-        
-        # Fetch seeded users and pass to child steps
-        seeded_hosts = db.query(User).filter(User.role == UserRole.HOST).all()
-        seeded_guests = db.query(User).filter(User.role == UserRole.GUEST).all()
-        
-        create_listings(db, seeded_hosts)
-        seeded_listings = db.query(Listing).all()
-        
-        create_bookings(db, seeded_guests, seeded_listings)
-        
-        # Seed reviews and calculate average ratings
-        create_reviews(db, seeded_guests, seeded_listings)
-        
-        create_wishlists(db, seeded_guests, seeded_listings)
+        seed_data(db)
         
         print_summary(db)
         print("Seeding completed successfully!")
