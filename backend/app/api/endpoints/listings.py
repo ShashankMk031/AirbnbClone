@@ -1,13 +1,15 @@
 import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
-from app.api.deps import get_listing_service
+from app.api.deps import get_listing_service, get_review_service
 from app.services.listing import (
     ListingService,
     ListingNotFoundError,
     HostNotFoundError,
     NotOwnerError,
 )
+from app.services.review import ReviewService, ReviewListingNotFoundError
+from app.schemas.review import PaginatedReviewResponse
 from app.schemas.listing import (
     PaginatedListingResponse,
     ListingDetailResponse,
@@ -226,5 +228,29 @@ def delete_listing(
     except NotOwnerError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+
+
+@router.get("/{id}/reviews", response_model=PaginatedReviewResponse)
+def get_listing_reviews(
+    id: int,
+    *,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    review_service: ReviewService = Depends(get_review_service)
+):
+    """
+    Retrieve reviews for a listing sorted newest first, with pagination.
+    """
+    try:
+        return review_service.get_listing_reviews(
+            listing_id=id,
+            page=page,
+            page_size=page_size
+        )
+    except ReviewListingNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )

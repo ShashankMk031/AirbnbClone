@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -10,7 +10,7 @@ class ReviewBase(BaseModel):
 
 
 class ReviewCreate(ReviewBase):
-    pass
+    author_id: int
 
 
 class ReviewUpdate(BaseModel):
@@ -28,3 +28,11 @@ class ReviewResponse(ReviewBase):
 
 class Review(ReviewResponse):
     pass
+
+
+class PaginatedReviewResponse(BaseModel):
+    items: List[ReviewResponse]
+    page: int
+    page_size: int
+    total: int
+    total_pages: int

@@ -17,8 +17,18 @@ from app.schemas.booking import (
     BookingResponse,
     BookingResponseWithListing,
 )
-from app.schemas.review import Review, ReviewCreate, ReviewUpdate, ReviewResponse
-from app.schemas.wishlist import Wishlist, WishlistCreate, WishlistResponse
+from app.schemas.review import (
+    Review,
+    ReviewCreate,
+    ReviewUpdate,
+    ReviewResponse,
+    PaginatedReviewResponse,
+)
+from app.schemas.wishlist import (
+    Wishlist,
+    WishlistCreate,
+    WishlistResponse,
+)
 
 __all__ = [
     "User",
@@ -43,6 +53,7 @@ __all__ = [
     "ReviewCreate",
     "ReviewUpdate",
     "ReviewResponse",
+    "PaginatedReviewResponse",
     "Wishlist",
     "WishlistCreate",
     "WishlistResponse",

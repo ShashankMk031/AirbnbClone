@@ -1,21 +1,37 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.api.deps import get_db
+from fastapi import APIRouter, Depends, HTTPException, status
+from app.api.deps import get_review_service
+from app.services.review import (
+    ReviewService,
+    ReviewAuthorNotFoundError,
+    ReviewListingNotFoundError,
+    ReviewDuplicateError,
+)
+from app.schemas.review import ReviewCreate, ReviewResponse
 
 router = APIRouter()
 
 
-@router.post("/")
-def create_review(db: Session = Depends(get_db)):
+@router.post("/", response_model=ReviewResponse, status_code=status.HTTP_201_CREATED)
+def create_review(
+    *,
+    review_in: ReviewCreate,
+    review_service: ReviewService = Depends(get_review_service)
+):
     """
-    Placeholder endpoint to create a review.
+    Create a new review for a listing.
+    Validates author and listing existence, and prevents duplicate reviews.
+    Recomputes rating and review_count on the listing.
     """
-    return {"message": "Create review placeholder"}
-
-
-@router.get("/")
-def get_reviews(db: Session = Depends(get_db)):
-    """
-    Placeholder endpoint to retrieve reviews.
-    """
-    return {"reviews": []}
+    try:
+        db_review = review_service.create_review(review_in)
+        return db_review
+    except (ReviewAuthorNotFoundError, ReviewListingNotFoundError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except ReviewDuplicateError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

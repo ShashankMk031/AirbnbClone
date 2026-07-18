@@ -1,21 +1,55 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.api.deps import get_db
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+from app.api.deps import get_wishlist_service
+from app.services.wishlist import (
+    WishlistService,
+    WishlistUserNotFoundError,
+    WishlistListingNotFoundError,
+    WishlistDuplicateError,
+    WishlistNotFoundError,
+)
+from app.schemas.wishlist import WishlistCreate, WishlistResponse
 
 router = APIRouter()
 
 
-@router.post("/")
-def add_to_wishlist(db: Session = Depends(get_db)):
+@router.post("/", response_model=WishlistResponse, status_code=status.HTTP_201_CREATED)
+def create_wishlist(
+    *,
+    wishlist_in: WishlistCreate,
+    wishlist_service: WishlistService = Depends(get_wishlist_service)
+):
     """
-    Placeholder endpoint to add a listing to user's wishlist.
+    Add a listing to user's wishlist.
+    Validates existence of user and listing, and prevents duplicates.
     """
-    return {"message": "Add to wishlist placeholder"}
+    try:
+        db_wishlist = wishlist_service.create_wishlist(wishlist_in)
+        return db_wishlist
+    except (WishlistUserNotFoundError, WishlistListingNotFoundError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except WishlistDuplicateError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 
-@router.get("/")
-def get_wishlist(db: Session = Depends(get_db)):
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_wishlist(
+    id: int,
+    wishlist_service: WishlistService = Depends(get_wishlist_service)
+):
     """
-    Placeholder endpoint to retrieve user's wishlist.
+    Remove a wishlist entry.
     """
-    return {"wishlist": []}
+    try:
+        wishlist_service.delete_wishlist(id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except WishlistNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )

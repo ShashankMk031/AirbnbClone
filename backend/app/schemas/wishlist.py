@@ -6,8 +6,9 @@ class WishlistBase(BaseModel):
     listing_id: int
 
 
-class WishlistCreate(WishlistBase):
-    pass
+class WishlistCreate(BaseModel):
+    user_id: int
+    listing_id: int
 
 
 class WishlistResponse(WishlistBase):
