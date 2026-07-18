@@ -3,9 +3,10 @@ import ListingCard from "./ListingCard";
 
 interface ListingGridProps {
   listings: ListingSummary[];
+  wishlistMap?: Record<number, number>;
 }
 
-export default function ListingGrid({ listings }: ListingGridProps) {
+export default function ListingGrid({ listings, wishlistMap = {} }: ListingGridProps) {
   if (listings.length === 0) {
     return (
       <div className="w-full text-center py-16 px-4 bg-zinc-50 dark:bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800">
@@ -34,7 +35,11 @@ export default function ListingGrid({ listings }: ListingGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
       {listings.map((listing) => (
-        <ListingCard key={listing.id} listing={listing} />
+        <ListingCard
+          key={listing.id}
+          listing={listing}
+          wishlistId={wishlistMap[listing.id] !== undefined ? wishlistMap[listing.id] : null}
+        />
       ))}
     </div>
   );

@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { ListingSummary } from "../../types/listing";
+import WishlistHeartButton from "./WishlistHeartButton";
 
 interface ListingCardProps {
   listing: ListingSummary;
+  wishlistId?: number | null;
 }
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80";
 
-export default function ListingCard({ listing }: ListingCardProps) {
+export default function ListingCard({ listing, wishlistId }: ListingCardProps) {
   const displayImage = listing.photos && listing.photos.length > 0
     ? listing.photos[0]
     : PLACEHOLDER_IMAGE;
@@ -20,6 +22,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
       <div className="flex flex-col gap-3">
         {/* Aspect ratio image container */}
         <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-900 relative shadow-sm group-hover:shadow-md transition-shadow duration-300">
+          <WishlistHeartButton listingId={listing.id} initialWishlistId={wishlistId ?? null} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={displayImage}

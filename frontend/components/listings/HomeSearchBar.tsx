@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function HomeSearchBar() {
   const router = useRouter();
@@ -11,9 +11,39 @@ export default function HomeSearchBar() {
   const [checkIn, setCheckIn] = useState(searchParams.get("check_in") || "");
   const [checkOut, setCheckOut] = useState(searchParams.get("check_out") || "");
   const [guests, setGuests] = useState(searchParams.get("guests") || "");
+  const [error, setError] = useState<string | null>(null);
+
+  // 1. Synchronize component state with URL changes (Back, Forward, Refresh, etc.)
+  useEffect(() => {
+    setLocation(searchParams.get("location") || "");
+    setCheckIn(searchParams.get("check_in") || "");
+    setCheckOut(searchParams.get("check_out") || "");
+    setGuests(searchParams.get("guests") || "");
+  }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    // 2. Client-side date bounds checks
+    if (checkIn && checkOut) {
+      const start = new Date(checkIn);
+      const end = new Date(checkOut);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        setError("Please enter valid dates.");
+        return;
+      }
+      if (end <= start) {
+        setError("Check-out date must be after check-in date.");
+        return;
+      }
+    } else if (checkIn && !checkOut) {
+      setError("Check-out date is required.");
+      return;
+    } else if (!checkIn && checkOut) {
+      setError("Check-in date is required.");
+      return;
+    }
 
     const params = new URLSearchParams(searchParams.toString());
 
@@ -33,6 +63,7 @@ export default function HomeSearchBar() {
     params.set("page", "1");
 
     router.push(`/?${params.toString()}`);
+    router.refresh();
   };
 
   const handleClear = () => {
@@ -40,7 +71,29 @@ export default function HomeSearchBar() {
     setCheckIn("");
     setCheckOut("");
     setGuests("");
+    setError(null);
     router.push("/");
+  };
+
+  // Helper change handlers that clear validation errors
+  const handleLocationChange = (val: string) => {
+    setLocation(val);
+    setError(null);
+  };
+
+  const handleCheckInChange = (val: string) => {
+    setCheckIn(val);
+    setError(null);
+  };
+
+  const handleCheckOutChange = (val: string) => {
+    setCheckOut(val);
+    setError(null);
+  };
+
+  const handleGuestsChange = (val: string) => {
+    setGuests(val);
+    setError(null);
   };
 
   return (
@@ -58,7 +111,7 @@ export default function HomeSearchBar() {
             type="text"
             placeholder="Search destinations"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => handleLocationChange(e.target.value)}
             className="w-full bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none mt-0.5"
           />
         </div>
@@ -73,7 +126,7 @@ export default function HomeSearchBar() {
           <input
             type="date"
             value={checkIn}
-            onChange={(e) => setCheckIn(e.target.value)}
+            onChange={(e) => handleCheckInChange(e.target.value)}
             className="w-full bg-transparent text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none mt-0.5 cursor-pointer"
           />
         </div>
@@ -88,7 +141,7 @@ export default function HomeSearchBar() {
           <input
             type="date"
             value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
+            onChange={(e) => handleCheckOutChange(e.target.value)}
             className="w-full bg-transparent text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none mt-0.5 cursor-pointer"
           />
         </div>
@@ -103,7 +156,7 @@ export default function HomeSearchBar() {
             </label>
             <select
               value={guests}
-              onChange={(e) => setGuests(e.target.value)}
+              onChange={(e) => handleGuestsChange(e.target.value)}
               className="w-full bg-transparent text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none mt-0.5 cursor-pointer appearance-none"
             >
               <option value="" className="dark:bg-zinc-950">Add guests</option>
@@ -158,6 +211,13 @@ export default function HomeSearchBar() {
           </div>
         </div>
       </form>
+
+      {/* Inline Validation Error below search bar */}
+      {error && (
+        <div className="mt-3 text-center text-xs font-bold text-rose-500 bg-rose-50 border border-rose-100 py-1.5 px-4 rounded-full max-w-md mx-auto dark:bg-rose-950/20 dark:border-rose-900/30">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
