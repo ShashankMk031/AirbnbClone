@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import HostDashboardClient from "../../../components/host/HostDashboardClient";
 import RoleGuard from "../../../components/common/RoleGuard";
 import { getListings } from "../../../services/listings";

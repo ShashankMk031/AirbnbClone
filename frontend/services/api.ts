@@ -10,7 +10,9 @@ interface RequestOptions extends RequestInit {
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { params, headers, ...rest } = options;
 
-  let url = `${API_BASE_URL}${path}`;
+  const baseUrl = API_BASE_URL.endsWith("/") ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  let url = `${baseUrl}${cleanPath}`;
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, val]) => {
