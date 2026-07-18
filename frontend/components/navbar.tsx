@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRole } from "../context/RoleContext";
 import RoleSwitcher from "./common/RoleSwitcher";
+import ThemeToggle from "./common/ThemeToggle";
 
 export default function Navbar() {
   const { role } = useRole();
@@ -36,6 +37,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           <RoleSwitcher />
           
           <div className="hidden sm:flex items-center gap-2 border border-zinc-200 dark:border-zinc-800 rounded-full p-2 hover:shadow-md cursor-pointer transition select-none">
