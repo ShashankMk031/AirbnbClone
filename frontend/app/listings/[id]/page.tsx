@@ -1,166 +1,109 @@
 import Link from "next/link";
+import PhotoGallery from "../../../components/listings/PhotoGallery";
+import ListingInfo from "../../../components/listings/ListingInfo";
+import AmenitiesSection from "../../../components/listings/AmenitiesSection";
+import ReviewsSection from "../../../components/listings/ReviewsSection";
+import BookingWidget from "../../../components/booking/BookingWidget";
+import { getListing } from "../../../services/listings";
+import { getListingReviews } from "../../../services/reviews";
+import { Review } from "../../../types/review";
 
 type Props = {
-  params: Promise<{ id: string }>
-}
+  params: Promise<{ id: string }>;
+};
 
 export default async function ListingDetailPage({ params }: Props) {
   const { id } = await params;
+  const listingId = Number(id);
 
-  // Static mock detail mapping
-  const listingDetails = {
-    id: Number(id) || 1,
-    title: "Luxury Beachfront Villa in Malibu",
-    location: "Malibu, California",
-    description: "Experience the ultimate coastal getaway in this stunning modern beachfront villa. Located directly on the sand in Malibu, this home features floor-to-ceiling windows, an expansive oceanfront deck, and premium designer finishes throughout. Relax to the sound of breaking waves and enjoy breathtaking sunsets over the Pacific.",
-    propertyType: "Entire Villa",
-    pricePerNight: 550,
-    rating: 4.95,
-    reviewsCount: 124,
-    amenities: ["Ocean view", "Direct beach access", "High-speed Wi-Fi", "Dedicated workspace", "Chef's kitchen", "Hot tub", "Air conditioning", "Free parking"],
-    images: [
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
-    ],
-    hostName: "Sarah Connor",
-    hostAvatar: "U"
-  };
+  if (isNaN(listingId)) {
+    return (
+      <div className="container mx-auto max-w-5xl px-4 py-16 text-center">
+        <h2 className="text-xl font-bold">Invalid Listing ID</h2>
+        <Link href="/" className="text-rose-500 hover:underline mt-4 inline-block">Return to Homepage</Link>
+      </div>
+    );
+  }
+
+  let listing = null;
+  let reviews: Review[] = [];
+  let errorMsg = null;
+  let is404 = false;
+
+  try {
+    listing = await getListing(listingId);
+    try {
+      const reviewsData = await getListingReviews(listingId, 1, 100);
+      reviews = reviewsData.items || [];
+    } catch {
+      // Reviews fail gracefully
+    }
+  } catch (err: any) {
+    if (err.message && err.message.includes("404")) {
+      is404 = true;
+    } else {
+      errorMsg = err.message || "Failed to load listing details.";
+    }
+  }
+
+  if (is404) {
+    return (
+      <div className="container mx-auto max-w-5xl px-4 py-16 text-center space-y-4">
+        <h2 className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-50">Listing Not Found</h2>
+        <p className="text-zinc-500 dark:text-zinc-400">The listing with ID {id} does not exist or has been removed.</p>
+        <Link href="/" className="bg-[#FF385C] text-white font-bold px-6 py-3 rounded-2xl hover:bg-[#E61E4D] transition inline-block">
+          Return to Homepage
+        </Link>
+      </div>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <div className="container mx-auto max-w-5xl px-4 py-16 text-center space-y-4">
+        <h2 className="text-2xl font-bold text-rose-600 dark:text-rose-400">Connection Error</h2>
+        <p className="text-zinc-500 dark:text-zinc-400">{errorMsg}</p>
+        <Link href="/" className="underline text-sm text-zinc-600 dark:text-zinc-400">Return to Homepage</Link>
+      </div>
+    );
+  }
+
+  if (!listing) return null;
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Title */}
-      <section className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">{listingDetails.title}</h1>
-        <div className="flex flex-wrap items-center justify-between gap-4 mt-2 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">★ {listingDetails.rating}</span>
-            <span className="text-muted-foreground">•</span>
-            <span className="underline cursor-pointer">{listingDetails.reviewsCount} reviews</span>
-            <span className="text-muted-foreground">•</span>
-            <span className="underline font-medium">{listingDetails.location}</span>
-          </div>
-          <div className="flex items-center gap-4 font-medium underline">
-            <button className="flex items-center gap-1.5 hover:bg-muted py-1.5 px-3 rounded-md transition">Share</button>
-            <button className="flex items-center gap-1.5 hover:bg-muted py-1.5 px-3 rounded-md transition">Save</button>
-          </div>
-        </div>
-      </section>
+    <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+      {/* Back to explore navigation */}
+      <div>
+        <Link href="/" className="text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition flex items-center gap-1">
+          ← Back to explore
+        </Link>
+      </div>
 
-      {/* Gallery */}
-      <section className="mb-8">
-        <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={listingDetails.images[0]}
-            alt={listingDetails.title}
-            className="h-full w-full object-cover object-center"
-          />
-        </div>
-      </section>
+      {/* Gallery Section */}
+      <PhotoGallery photos={listing.photos} title={listing.title} />
 
-      {/* Content Layout */}
+      {/* Content Layout Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Info Column */}
+        {/* Info detail (2/3 width on desktop) */}
         <div className="md:col-span-2 space-y-6">
-          <div className="border-b border-border pb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">{listingDetails.propertyType} hosted by {listingDetails.hostName}</h2>
-              <p className="text-muted-foreground text-sm mt-1">8 guests • 4 bedrooms • 4 beds • 4.5 baths</p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
-              {listingDetails.hostAvatar}
-            </div>
-          </div>
-
-          <div className="border-b border-border pb-6">
-            <h3 className="text-xl font-bold mb-4">About this space</h3>
-            <p className="text-muted-foreground leading-relaxed">{listingDetails.description}</p>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-bold mb-4">What this place offers</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {listingDetails.amenities.map((amenity, i) => (
-                <div key={i} className="flex items-center gap-3 text-sm text-foreground">
-                  <span className="text-primary font-bold">✓</span>
-                  <span>{amenity}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ListingInfo listing={listing} />
+          <AmenitiesSection amenities={listing.amenities} />
         </div>
 
-        {/* Booking Card Sticky Wrapper */}
+        {/* Sticky Booking Widget (1/3 width on desktop) */}
         <div className="relative">
-          <div className="border border-border rounded-2xl p-6 shadow-xl sticky top-28 bg-card">
-            <div className="flex justify-between items-baseline mb-6">
-              <div>
-                <span className="text-2xl font-bold">${listingDetails.pricePerNight}</span>
-                <span className="text-muted-foreground text-sm"> night</span>
-              </div>
-              <div className="flex items-center gap-1 text-sm font-medium">
-                <span>★ {listingDetails.rating}</span>
-                <span className="text-muted-foreground">•</span>
-                <span className="underline text-xs">{listingDetails.reviewsCount} reviews</span>
-              </div>
-            </div>
-
-            {/* Date Overlap Check & Booking Form Mock */}
-            <form className="space-y-4">
-              <div className="border border-border rounded-xl">
-                <div className="grid grid-cols-2 border-b border-border">
-                  <div className="p-3">
-                    <label className="block text-[10px] font-bold uppercase tracking-wider">Check-in</label>
-                    <input type="date" className="w-full text-sm outline-none bg-transparent pt-1" defaultValue="2026-07-20" />
-                  </div>
-                  <div className="p-3 border-l border-border">
-                    <label className="block text-[10px] font-bold uppercase tracking-wider">Checkout</label>
-                    <input type="date" className="w-full text-sm outline-none bg-transparent pt-1" defaultValue="2026-07-25" />
-                  </div>
-                </div>
-                <div className="p-3">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider">Guests</label>
-                  <select className="w-full text-sm outline-none bg-transparent pt-1">
-                    <option>1 guest</option>
-                    <option>2 guests</option>
-                    <option>3 guests</option>
-                    <option>4 guests</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="w-full bg-[#FF385C] text-white font-semibold py-3 rounded-lg hover:bg-[#E61E4D] transition text-center block"
-              >
-                Reserve stay
-              </button>
-            </form>
-
-            <div className="mt-4 text-center text-xs text-muted-foreground">
-              You won&apos;t be charged yet
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-border space-y-3 text-sm text-foreground">
-              <div className="flex justify-between">
-                <span className="underline">${listingDetails.pricePerNight} x 5 nights</span>
-                <span>${listingDetails.pricePerNight * 5}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="underline">Cleaning fee</span>
-                <span>$85</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="underline">Airbnb service fee</span>
-                <span>$60</span>
-              </div>
-              <div className="flex justify-between font-bold pt-3 border-t border-border">
-                <span>Total before taxes</span>
-                <span>${(listingDetails.pricePerNight * 5) + 85 + 60}</span>
-              </div>
-            </div>
+          <div className="sticky top-24">
+            <BookingWidget listing={listing} />
           </div>
         </div>
       </div>
+
+      {/* Reviews Section */}
+      <ReviewsSection
+        reviews={reviews}
+        rating={listing.rating}
+        reviewCount={listing.review_count}
+      />
     </div>
   );
 }
