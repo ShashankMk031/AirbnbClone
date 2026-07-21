@@ -137,37 +137,20 @@ function CheckoutContent() {
     setValidationErrors({});
     setErrorMsg(null);
 
-    // Form Validations
+    // Demo-only validation — only requires non-empty fields
     const errors: Record<string, string> = {};
 
     if (!cardName.trim()) {
-      errors.cardName = "Cardholder Name is required.";
+      errors.cardName = "Demo Cardholder Name is required.";
     }
-
-    const cleanCardNo = cardNumber.replace(/\s+/g, "");
-    if (!/^\d{16}$/.test(cleanCardNo)) {
-      errors.cardNumber = "Card Number must be exactly 16 digits.";
+    if (!cardNumber.trim()) {
+      errors.cardNumber = "Demo Card Number is required.";
     }
-
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-      errors.expiry = "Expiry must be in MM/YY format.";
-    } else {
-      const [m, y] = expiry.split("/").map(Number);
-      if (m < 1 || m > 12) {
-        errors.expiry = "Month must be between 01 and 12.";
-      } else {
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth() + 1;
-        const expYear = 2000 + y;
-        if (expYear < currentYear || (expYear === currentYear && m < currentMonth)) {
-          errors.expiry = "Card has expired.";
-        }
-      }
+    if (!expiry.trim()) {
+      errors.expiry = "Demo Expiry is required.";
     }
-
-    if (!/^\d{3}$/.test(cvv)) {
-      errors.cvv = "CVV must be exactly 3 digits.";
+    if (!cvv.trim()) {
+      errors.cvv = "Demo CVV is required.";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -255,9 +238,9 @@ function CheckoutContent() {
           <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto text-3xl shadow-sm">
             ✓
           </div>
-          <h3 className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">Booking Confirmed!</h3>
+          <h3 className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">Demo Booking Confirmed!</h3>
           <p className="text-sm text-zinc-555 dark:text-zinc-400 leading-relaxed">
-            Your payment was successful and stay reservation details have been finalized. Redirecting to your trips...
+            Your demo booking has been recorded. No real payment was processed. Redirecting to your trips...
           </p>
         </div>
       </div>
@@ -266,9 +249,21 @@ function CheckoutContent() {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      {/* Demo Disclaimer Banner */}
+      <div className="flex items-start gap-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-2xl px-5 py-4">
+        <span className="text-blue-500 text-xl mt-0.5" aria-hidden="true">ℹ️</span>
+        <div className="space-y-1">
+          <p className="text-sm font-extrabold text-blue-800 dark:text-blue-300">Demo Checkout — No Real Payment</p>
+          <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
+            This is an educational project. Payments are completely simulated and no real transaction is processed.
+            <strong> Do NOT enter real credit or debit card information.</strong> Any demo values may be used.
+          </p>
+        </div>
+      </div>
+
       {/* Title */}
       <h1 className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
-        Confirm and pay
+        Demo Checkout
       </h1>
 
       {/* Main Grid split */}
@@ -325,20 +320,20 @@ function CheckoutContent() {
             </div>
           </div>
 
-          {/* Mock Credit Card fields */}
+          {/* Demo Payment fields */}
           <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm space-y-4">
             <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-55 border-b border-zinc-100 dark:border-zinc-900 pb-2">
-              Mock Payment Details
+              Demo Payment Details
             </h2>
             <form onSubmit={handlePay} className="space-y-4 text-xs">
-              {/* Holder Name */}
+              {/* Demo Holder Name */}
               <div>
                 <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-                  Cardholder Name
+                  Demo Cardholder Name
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Rohan Das"
+                  placeholder="Demo User"
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
                   className={`w-full bg-white dark:bg-zinc-950 border py-2.5 px-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-zinc-400 ${
@@ -354,15 +349,15 @@ function CheckoutContent() {
                 )}
               </div>
 
-              {/* Card number */}
+              {/* Demo Card Number */}
               <div>
                 <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-                  Card Number
+                  Demo Card Number
                 </label>
                 <input
                   type="text"
                   maxLength={19}
-                  placeholder="1234 5678 1234 5678"
+                  placeholder="1111 2222 3333 4444"
                   value={isCardFocused ? cardNumber : getMaskedCardNumber(cardNumber)}
                   onFocus={() => setIsCardFocused(true)}
                   onBlur={() => setIsCardFocused(false)}
@@ -393,16 +388,16 @@ function CheckoutContent() {
                 )}
               </div>
 
-              {/* Expiry & CVV */}
+              {/* Demo Expiry & Demo CVV */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-                    Expiry (MM/YY)
+                    Demo Expiry
                   </label>
                   <input
                     type="text"
                     maxLength={5}
-                    placeholder="MM/YY"
+                    placeholder="12/30"
                     value={expiry}
                     onChange={(e) => {
                       let val = e.target.value.replace(/\D/g, "");
@@ -425,11 +420,11 @@ function CheckoutContent() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-                    CVV
+                    Demo CVV
                   </label>
                   <input
                     type="text"
-                    maxLength={3}
+                    maxLength={4}
                     placeholder="123"
                     value={cvv}
                     onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
@@ -454,7 +449,7 @@ function CheckoutContent() {
                 </div>
               )}
 
-              {/* Pay Now Submit Button */}
+              {/* Demo Submit Button */}
               <button
                 type="submit"
                 disabled={paymentLoading || nights <= 0}
@@ -466,12 +461,18 @@ function CheckoutContent() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span>Processing Payment...</span>
+                    <span>Simulating Booking...</span>
                   </div>
                 ) : (
-                  <span>Confirm Payment & Book</span>
+                  <span>Complete Demo Booking</span>
                 )}
               </button>
+
+              {/* Disclaimer note */}
+              <p className="text-center text-[10px] text-zinc-400 dark:text-zinc-500 leading-relaxed">
+                No payment is processed. This page exists only to demonstrate the booking workflow.
+                No card information is stored.
+              </p>
             </form>
           </div>
         </div>
